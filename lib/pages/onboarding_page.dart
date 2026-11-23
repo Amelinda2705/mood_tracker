@@ -4,6 +4,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:mood_tracker/commons/global.dart';
+import 'package:mood_tracker/pages/home_page.dart';
 
 class OnBoardingPage extends StatefulWidget {
   const OnBoardingPage({super.key});
@@ -41,9 +42,7 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
                 onPressed: () {
                   carouselController.animateToPage(2);
                 },
-                style: TextButton.styleFrom(
-                  overlayColor: Colors.transparent,
-                ),
+                style: TextButton.styleFrom(overlayColor: Colors.transparent),
                 child: Text(
                   currentIndex == 2 ? "" : "Lewati",
                   style: TextStyle(
@@ -419,6 +418,10 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
             TextButton(
               onPressed: () {
                 if (currentIndex == 2) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => HomePage()),
+                  );
                 } else {
                   carouselController.nextPage();
                 }
@@ -433,7 +436,10 @@ class _OnBoardingPageState extends State<OnBoardingPage> {
                 child: Center(
                   child: Text(
                     currentIndex == 2 ? "Mulai Sekarang" : "Lanjut",
-                    style: TextStyle(fontSize: 16, color: Global().textOnPrimary),
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Global().textOnPrimary,
+                    ),
                   ),
                 ),
               ),

@@ -33,3 +33,5 @@ flutter:
         - assets/mood_angry.svg
         - assets/mood_sad.svg
         - assets/mood_anxious.svg
+        - assets/plus.svg
+        - assets/more.svg
