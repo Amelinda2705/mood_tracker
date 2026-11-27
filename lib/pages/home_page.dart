@@ -1,6 +1,11 @@
-import 'package:flutter_svg/svg.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:intl/intl.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:mood_tracker/commons/global.dart';
+import 'package:mood_tracker/model/mood.dart';
+import 'package:mood_tracker/pages/add_page.dart';
+import 'package:mood_tracker/services/mood_service.dart';
+import 'package:mood_tracker/widgets/mood_card.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -10,6 +15,27 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  bool _isSameDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
+
+  Widget _title(String text) => Padding(
+    padding: const EdgeInsets.only(top: 8, bottom: 12),
+    child: Text(
+      text,
+      style: TextStyle(fontSize: 15, fontWeight: Global().semiBold),
+    ),
+  );
+
+  Widget _card(Mood m) => MoodCard(
+    mood: Global().moodByKey(m.mood),
+    subtitle: "${DateFormat('HH:mm').format(m.date)} · ${m.notes}",
+    onEdit: () => Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => AddPage(mood: m)),
+    ),
+    onDelete: () => m.delete(),
+  );
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -27,7 +53,7 @@ class _HomePageState extends State<HomePage> {
                     spacing: 4,
                     children: [
                       Text(
-                        "Halo, Zika",
+                        "Halo, Zika 👋",
                         textAlign: TextAlign.left,
                         style: TextStyle(
                           fontWeight: Global().semiBold,
@@ -53,7 +79,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                     child: Center(
                       child: Text(
-                        "z",
+                        "Z",
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: Global().semiBold,
@@ -77,101 +103,56 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                spacing: 8,
-                children: [
-                  Text(
-                    "Hari Ini",
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: Global().semiBold,
-                    ),
-                  ),
+              Expanded(
+                child: ValueListenableBuilder(
+                  valueListenable: MoodService.box.listenable(),
+                  builder: (context, box, _) {
+                    final moods = box.values.toList()
+                      ..sort((a, b) => b.date.compareTo(a.date));
 
-                  Container(
-                    padding: EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Global().surface,
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Global().primary.withValues(alpha: 0.16),
-                          blurRadius: 16,
-                          spreadRadius: 0,
-                          offset: Offset(0, 6),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      spacing: 16,
+                    final now = DateTime.now();
+                    final yesterdayDate = now.subtract(const Duration(days: 1));
+
+                    final today = moods
+                        .where((m) => _isSameDay(m.date, now))
+                        .toList();
+                    final yesterday = moods
+                        .where((m) => _isSameDay(m.date, yesterdayDate))
+                        .toList();
+
+                    return ListView(
+                      padding: EdgeInsets.zero,
                       children: [
-                        Container(
-                          width: 44,
-                          height: 44,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: Global().moodExcited,
-                            borderRadius: BorderRadius.circular(110),
-                          ),
-                          child: SvgPicture.asset(
-                            'assets/mood_excited.svg',
-                            height: 70,
-                            width: 70,
-                          ),
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-
-                          spacing: 4,
-                          children: [
-                            Text(
-                              "Bersemangat",
-                              style: TextStyle(
-                                fontWeight: Global().medium,
-                                fontSize: 16,
-                              ),
-                            ),
-                            Text(
-                              "14:20 · Dapat kabar baik dari klien, semangat banget!",
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: Global().regular,
-                              ),
-                            ),
-                          ],
-                        ),
-                        SvgPicture.asset(
-                          'assets/more.svg',
-                          height: 32,
-                          width: 32,
-                        ),
+                        if (today.isNotEmpty) ...[
+                          _title("Hari Ini"),
+                          ...today.map(_card),
+                        ],
+                        if (yesterday.isNotEmpty) ...[
+                          const SizedBox(height: 12),
+                          _title("Kemarin"),
+                          ...yesterday.map(_card),
+                        ],
                       ],
-                    ),
-                  ),
-                ],
+                    );
+                  },
+                ),
               ),
             ],
           ),
         ),
       ),
-      // bottomNavigationBar: SafeArea(
-      //   child: Container(
-      //     width: 56,
-      //     height: 56,
-      //     decoration: BoxDecoration(
-      //       color: Global().primary,
-      //       borderRadius: BorderRadius.circular(100),
-      //     ),
-      //     child: Padding(
-      //       padding: EdgeInsets.all(16),
-      //       child: ElevatedButton(
-      //         onPressed: () {},
-      //         child: SvgPicture.asset('assets/plus.svg', height: 24, width: 24),
-      //       ),
-      //     ),
-      //   ),
-      // ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const AddPage()),
+        ),
+        backgroundColor: Global().primary,
+        elevation: 0,
+        shape: const CircleBorder(),
+        child: Icon(Icons.add, color: Global().textOnPrimary),
+      ),
     );
   }
 }
